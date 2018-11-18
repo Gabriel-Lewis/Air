@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		C02EC7FA21A0C4EB00B44FE5 /* UserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = C02EC7F921A0C4EB00B44FE5 /* UserDefaults.swift */; };
-		C02EC7FC21A0C67300B44FE5 /* ZipcodeValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C02EC7FB21A0C67300B44FE5 /* ZipcodeValidator.swift */; };
+		C02EC80221A0E46A00B44FE5 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = C02EC80121A0E46A00B44FE5 /* Secrets.swift */; };
 		C0B42B6D21A0B1CA00EA0F54 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0B42B6C21A0B1CA00EA0F54 /* AppDelegate.swift */; };
 		C0B42B7121A0B1CC00EA0F54 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C0B42B7021A0B1CC00EA0F54 /* Assets.xcassets */; };
 		C0B42B7D21A0B1FB00EA0F54 /* AirQuality.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0B42B7C21A0B1FB00EA0F54 /* AirQuality.swift */; };
@@ -20,7 +20,7 @@
 
 /* Begin PBXFileReference section */
 		C02EC7F921A0C4EB00B44FE5 /* UserDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaults.swift; sourceTree = "<group>"; };
-		C02EC7FB21A0C67300B44FE5 /* ZipcodeValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipcodeValidator.swift; sourceTree = "<group>"; };
+		C02EC80121A0E46A00B44FE5 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		C0B42B6921A0B1CA00EA0F54 /* Air.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Air.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0B42B6C21A0B1CA00EA0F54 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C0B42B7021A0B1CC00EA0F54 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -65,10 +65,10 @@
 			children = (
 				C0B42B6C21A0B1CA00EA0F54 /* AppDelegate.swift */,
 				C0B42B7E21A0B23500EA0F54 /* MenuViewController.swift */,
+				C02EC80121A0E46A00B44FE5 /* Secrets.swift */,
 				C02EC7F921A0C4EB00B44FE5 /* UserDefaults.swift */,
 				C0B42BA021A0B98000EA0F54 /* Menu.xib */,
 				C0B42B8221A0B2B100EA0F54 /* PopOver.swift */,
-				C02EC7FB21A0C67300B44FE5 /* ZipcodeValidator.swift */,
 				C0B42B8021A0B27B00EA0F54 /* MenuView.xib */,
 				C0B42B7021A0B1CC00EA0F54 /* Assets.xcassets */,
 				C0B42B7521A0B1CC00EA0F54 /* Info.plist */,
@@ -155,9 +155,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				C0B42B8321A0B2B100EA0F54 /* PopOver.swift in Sources */,
+				C02EC80221A0E46A00B44FE5 /* Secrets.swift in Sources */,
 				C02EC7FA21A0C4EB00B44FE5 /* UserDefaults.swift in Sources */,
 				C0B42B7D21A0B1FB00EA0F54 /* AirQuality.swift in Sources */,
-				C02EC7FC21A0C67300B44FE5 /* ZipcodeValidator.swift in Sources */,
 				C0B42B6D21A0B1CA00EA0F54 /* AppDelegate.swift in Sources */,
 				C0B42B7F21A0B23500EA0F54 /* MenuViewController.swift in Sources */,
 			);

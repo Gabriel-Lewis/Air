@@ -47,7 +47,7 @@ struct Category: Codable {
 
 class AirQuality {
     private var url: URL {
-        let urlString = "http://www.airnowapi.org/aq/observation/zipCode/current/?format=application/json&API_KEY=AC5D3CAB-2869-4108-8ABE-2ADED73E7340&zipCode="
+        let urlString = "http://www.airnowapi.org/aq/observation/zipCode/current/?format=application/json&API_KEY=\(Secrets.apiKey)&zipCode="
         guard let zipcode = zipcode else {
             return URL(string: urlString + "94115")!
         }
