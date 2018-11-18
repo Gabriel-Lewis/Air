@@ -45,7 +45,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         
         if let button = statusItem.button {
-            button.title = "240"
+            button.title = "..."
             button.target = self
             button.action = #selector(self.togglePopover(sender:))
             button.highlight(true)
@@ -53,9 +53,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = MenuViewController(nibName: NSNib.Name(rawValue: "MenuView"), bundle: nil)
         popover.contentViewController = menu
         self.menuVew = menu
-        // Disable delay for popover - default is true
         popover.animates = true
-        // When something else is clicked, close the popover
         popover.behavior = .transient
         
         updateAirQuality()
@@ -76,11 +74,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     pstyle.alignment = .center
                     
                     switch category.number {
-                    case 0, 1, 2:
+                    case 0, 1:
                         button.layer?.backgroundColor = NSColor.green.cgColor
                         button.attributedTitle = NSAttributedString(string: aqi, attributes: [ NSAttributedStringKey.foregroundColor : NSColor.black, NSAttributedStringKey.paragraphStyle : pstyle ])
-                    case 3:
+                    case 2:
                         button.layer?.backgroundColor = NSColor.yellow.cgColor
+                        button.attributedTitle = NSAttributedString(string: aqi, attributes: [ NSAttributedStringKey.foregroundColor : NSColor.black, NSAttributedStringKey.paragraphStyle : pstyle ])
+                    case 3:
+                        button.layer?.backgroundColor = NSColor.orange.cgColor
                         button.attributedTitle = NSAttributedString(string: aqi, attributes: [ NSAttributedStringKey.foregroundColor : NSColor.black, NSAttributedStringKey.paragraphStyle : pstyle ])
                     case 4:
                         button.layer?.backgroundColor = NSColor.red.cgColor

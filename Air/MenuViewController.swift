@@ -34,7 +34,6 @@ class MenuViewController: NSViewController {
 
     }
     
-    // This is linked up to the "Quit Button" in the MenuViewController.xib
     @IBAction func quit(_ sender: NSButton) {
         NSApplication.shared.terminate(self)
     }
@@ -79,11 +78,7 @@ class MenuViewController: NSViewController {
 
 extension MenuViewController: NSTextFieldDelegate {
     public override func controlTextDidChange(_ obj: Notification) {
-        // check the identifier to be sure you have the correct textfield if more are used
         if let textField = obj.object as? NSTextField, self.zipcodeLabel.identifier == textField.identifier {
-            print("\n\nMy own textField = \(self.zipcodeLabel)\nNotification textfield = \(textField)")
-            
-            print("\nChanged text = \(textField.stringValue)\n")
             guard validZipCode(postalCode: textField.stringValue) else { return }
             UserDefaults.standard.zipcode = textField.stringValue
             UserDefaults.standard.synchronize()
