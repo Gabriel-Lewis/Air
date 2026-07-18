@@ -26,11 +26,7 @@ class MenuViewController: NSViewController {
         let date = formatter.string(from: self.date)
         self.dateLabel?.cell?.title = date
         zipcodeLabel.delegate = self
-        if let zipcode = UserDefaults.standard.zipcode {
-            self.zipcodeLabel.cell?.title = zipcode
-        } else {
-            self.zipcodeLabel.cell?.title = "94115"
-        }
+        self.zipcodeLabel.cell?.title = UserDefaults.standard.zipcode ?? AirQuality.defaultZipcode
 
     }
     
