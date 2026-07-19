@@ -58,11 +58,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         updateAirQuality()
         startTimer()
+
+        // Refresh immediately when the machine wakes, so a laptop that's been
+        // asleep doesn't sit showing a stale reading until the next timer tick.
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(updateAirQuality),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
     }
-    
+
     func startTimer() {
         self.timer?.invalidate()
-        self.timer = Timer.scheduledTimer(timeInterval: 600, target: self, selector: #selector(updateAirQuality), userInfo: nil, repeats: true)
+        let timer = Timer.scheduledTimer(timeInterval: 600, target: self, selector: #selector(updateAirQuality), userInfo: nil, repeats: true)
+        timer.tolerance = 60 // let the system coalesce the timer to save power
+        self.timer = timer
     }
     
     @objc func updateAirQuality() {

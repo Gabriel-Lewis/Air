@@ -46,12 +46,11 @@ struct Category: Codable {
 
 
 class AirQuality {
+    static let defaultZipcode = "94115"
+
     private var url: URL {
-        let urlString = "http://www.airnowapi.org/aq/observation/zipCode/current/?format=application/json&API_KEY=\(Secrets.apiKey)&zipCode="
-        guard let zipcode = zipcode else {
-            return URL(string: urlString + "94115")!
-        }
-        return URL(string: urlString + zipcode)!
+        let urlString = "https://www.airnowapi.org/aq/observation/zipCode/current/?format=application/json&API_KEY=\(Secrets.apiKey)&zipCode="
+        return URL(string: urlString + (zipcode ?? AirQuality.defaultZipcode))!
     }
     
     var zipcode: String? {
@@ -69,18 +68,15 @@ class AirQuality {
                 print("err: \(err.code)")
             }
             let decoder = JSONDecoder()
-            guard let data = data else { fatalError() }
-            guard let json = try? decoder.decode(AirQualityData.self, from: data) else { fatalError() }
-            
-            for quality in json {
-                print("quality: \(quality)")
+            guard let data = data,
+                let json = try? decoder.decode(AirQualityData.self, from: data),
+                let worst = json.max(by: { $0.aqi < $1.aqi }) else {
+                    completion("N/A", Category(number: -1, name: "n/a"))
+                    return
             }
-            guard json.isEmpty == false else {
-                completion("N/A", Category.init(number: -1, name: "n/a"))
-                return
-            }
-            
-            completion("\(json[1].aqi)", json[1].category)
+            // Report the worst reading across all parameters (e.g. PM2.5 vs ozone),
+            // which is how the overall AQI for an area is defined.
+            completion("\(worst.aqi)", worst.category)
         }
     }
     
