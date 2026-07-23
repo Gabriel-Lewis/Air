@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UserNotifications
 
 typealias AirQualityData = [AirQualityDatum]
 
@@ -62,7 +63,7 @@ class AirQuality {
         
     }
     
-    func getAirQuality(completion: @escaping ((String, Category) -> ())) {
+    func getAirQuality(completion: @escaping ((String, Category, AirQualityDatum?) -> ())) {
         self.unauthenticatedRequest { (data, err) in
             if let err = err as? NSError {
                 print("err: \(err.code)")
@@ -71,12 +72,12 @@ class AirQuality {
             guard let data = data,
                 let json = try? decoder.decode(AirQualityData.self, from: data),
                 let worst = json.max(by: { $0.aqi < $1.aqi }) else {
-                    completion("N/A", Category(number: -1, name: "n/a"))
+                    completion("N/A", Category(number: -1, name: "n/a"), nil)
                     return
             }
             // Report the worst reading across all parameters (e.g. PM2.5 vs ozone),
             // which is how the overall AQI for an area is defined.
-            completion("\(worst.aqi)", worst.category)
+            completion("\(worst.aqi)", worst.category, worst)
         }
     }
     
@@ -100,5 +101,100 @@ class AirQuality {
             completion(data, nil)
         }
         task.resume()
+    }
+}
+
+
+// MARK: - History
+
+/// One point on the trend chart.
+struct AQIReading: Codable {
+    let date: Date
+    let aqi: Int
+    let categoryNumber: Int
+}
+
+/// Persists a rolling window of recent AQI readings, used to draw the trend chart.
+final class AQIHistory {
+    static let shared = AQIHistory()
+    private let key = "aqiHistory"
+    private let window: TimeInterval = 24 * 60 * 60 // keep a rolling 24 hours
+
+    private init() {}
+
+    var readings: [AQIReading] {
+        guard let data = UserDefaults.standard.data(forKey: key),
+            let decoded = try? JSONDecoder().decode([AQIReading].self, from: data) else {
+                return []
+        }
+        return decoded
+    }
+
+    @discardableResult
+    func record(aqi: Int, categoryNumber: Int, date: Date = Date()) -> [AQIReading] {
+        var all = readings
+        all.append(AQIReading(date: date, aqi: aqi, categoryNumber: categoryNumber))
+        // Keep only readings from the last 24 hours (robust to sleep gaps and
+        // any change in the poll interval).
+        let cutoff = date.addingTimeInterval(-window)
+        all = all.filter { $0.date >= cutoff }
+        if let data = try? JSONEncoder().encode(all) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+        return all
+    }
+
+    /// Discards all history. Call when the location (zip code) changes so
+    /// readings from different places aren't charted together.
+    func clear() {
+        UserDefaults.standard.removeObject(forKey: key)
+    }
+}
+
+
+// MARK: - Notifications
+
+/// Posts a local notification when the AQI category changes (e.g. Good -> Moderate),
+/// rather than on every poll, so the user isn't spammed while conditions are steady.
+final class Notifier {
+    static let shared = Notifier()
+    private let lastCategoryKey = "lastNotifiedCategory"
+
+    private init() {}
+
+    func requestAuthorization() {
+        // UserNotifications requires macOS 10.14+; on older systems this is a no-op
+        // and the app simply runs without change notifications.
+        guard #available(macOS 10.14, *) else { return }
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, error in
+            if let error = error {
+                print("notification auth error: \(error)")
+            }
+        }
+    }
+
+    /// Forgets the last category so the next reading establishes a fresh
+    /// baseline (used when the location changes).
+    func reset() {
+        UserDefaults.standard.removeObject(forKey: lastCategoryKey)
+    }
+
+    func notifyIfCategoryChanged(area: String, aqi: Int, category: Category) {
+        let defaults = UserDefaults.standard
+        let previous = defaults.object(forKey: lastCategoryKey) as? Int
+        defaults.set(category.number, forKey: lastCategoryKey)
+
+        // Skip the very first reading and any poll where the category is unchanged.
+        guard let previous = previous, previous != category.number else { return }
+        guard #available(macOS 10.14, *) else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = "\(area): \(category.name)"
+        let direction = category.number > previous ? "worsened" : "improved"
+        content.body = "Air quality \(direction) — AQI is now \(aqi)."
+        content.sound = UNNotificationSound.default()
+
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
     }
 }

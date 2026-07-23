@@ -56,6 +56,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popover.animates = true
         popover.behavior = .transient
         
+        Notifier.shared.requestAuthorization()
         updateAirQuality()
         startTimer()
 
@@ -77,7 +78,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func updateAirQuality() {
-        AirQuality.shared.getAirQuality { (aqi, category) in
+        AirQuality.shared.getAirQuality { (aqi, category, datum) in
             DispatchQueue.main.async {
                 if let button = self.statusItem.button {
                     self.statusItem.button?.highlight(true)
@@ -108,6 +109,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         button.attributedTitle = NSAttributedString(string: aqi, attributes: [ NSAttributedStringKey.foregroundColor : NSColor.white, NSAttributedStringKey.paragraphStyle : pstyle ])
                     }
                 }
+                // Record the reading for the trend chart and notify on category changes.
+                if let datum = datum {
+                    AQIHistory.shared.record(aqi: datum.aqi, categoryNumber: datum.category.number)
+                    Notifier.shared.notifyIfCategoryChanged(area: datum.reportingArea, aqi: datum.aqi, category: datum.category)
+                }
+                self.menuVew?.updateChart()
                 self.menuVew?.updateDateLabel()
             }
         }
