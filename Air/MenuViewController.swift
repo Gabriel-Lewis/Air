@@ -157,64 +157,46 @@ final class SparklineView: NSView {
         }
 
         guard let ctx = NSGraphicsContext.current?.cgContext else { return }
-        let rgb = CGColorSpaceCreateDeviceRGB()
 
-        // Bold neon palette.
-        let neonCyan = NSColor(red: 0.0, green: 1.0, blue: 0.94, alpha: 1)
-        let neonMagenta = NSColor(red: 1.0, green: 0.12, blue: 0.82, alpha: 1)
+        func categoryColor(_ i: Int) -> NSColor {
+            return SparklineView.color(forCategory: readings[i].categoryNumber)
+        }
 
-        // Line path (reused for the glow and the gradient fill).
-        let linePath = CGMutablePath()
-        linePath.move(to: point(0))
-        for i in 1..<readings.count { linePath.addLine(to: point(i)) }
+        // Soft filled band under each segment, tinted with that segment's
+        // category color so the chart's fill matches the menu-bar color.
+        for i in 0..<readings.count - 1 {
+            let p0 = point(i), p1 = point(i + 1)
+            let band = NSBezierPath()
+            band.move(to: NSPoint(x: p0.x, y: plot.minY))
+            band.line(to: p0)
+            band.line(to: p1)
+            band.line(to: NSPoint(x: p1.x, y: plot.minY))
+            band.close()
+            categoryColor(i).withAlphaComponent(0.18).setFill()
+            band.fill()
+        }
 
-        // Neon glow under the line.
-        let areaPath = CGMutablePath()
-        areaPath.move(to: CGPoint(x: plot.minX, y: plot.minY))
-        for i in readings.indices { areaPath.addLine(to: point(i)) }
-        areaPath.addLine(to: CGPoint(x: plot.maxX, y: plot.minY))
-        areaPath.closeSubpath()
-        ctx.saveGState()
-        ctx.addPath(areaPath)
-        ctx.clip()
-        let areaGradient = CGGradient(colorsSpace: rgb, colors: [
-            neonCyan.withAlphaComponent(0.35).cgColor,
-            neonMagenta.withAlphaComponent(0.02).cgColor
-        ] as CFArray, locations: [0, 1])!
-        ctx.drawLinearGradient(areaGradient,
-                               start: CGPoint(x: plot.minX, y: plot.maxY),
-                               end: CGPoint(x: plot.minX, y: plot.minY),
-                               options: [])
-        ctx.restoreGState()
-
-        // Stroke outline of the line, used twice: once for the glow, once clipped for the gradient.
-        let stroked = linePath.copy(strokingWithWidth: 2.6, lineCap: .round, lineJoin: .round, miterLimit: 10)
-
-        // 1) Glow halo.
-        ctx.saveGState()
-        ctx.setShadow(offset: .zero, blur: 9, color: neonCyan.withAlphaComponent(0.9).cgColor)
-        ctx.addPath(stroked)
-        ctx.setFillColor(neonCyan.cgColor)
-        ctx.fillPath()
-        ctx.restoreGState()
-
-        // 2) Neon cyan -> magenta gradient along the line.
-        ctx.saveGState()
-        ctx.addPath(stroked)
-        ctx.clip()
-        let lineGradient = CGGradient(colorsSpace: rgb, colors: [
-            neonCyan.cgColor, neonMagenta.cgColor
-        ] as CFArray, locations: [0, 1])!
-        ctx.drawLinearGradient(lineGradient,
-                               start: CGPoint(x: plot.minX, y: plot.midY),
-                               end: CGPoint(x: plot.maxX, y: plot.midY),
-                               options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-        ctx.restoreGState()
+        // The trend line, drawn one segment at a time so its color and glow
+        // track the AQI category — the same colors the menu bar uses.
+        ctx.setLineWidth(2.4)
+        ctx.setLineCap(.round)
+        ctx.setLineJoin(.round)
+        for i in 0..<readings.count - 1 {
+            let color = categoryColor(i)
+            ctx.saveGState()
+            ctx.setShadow(offset: .zero, blur: 6, color: color.withAlphaComponent(0.8).cgColor)
+            ctx.setStrokeColor(color.cgColor)
+            ctx.beginPath()
+            ctx.move(to: point(i))
+            ctx.addLine(to: point(i + 1))
+            ctx.strokePath()
+            ctx.restoreGState()
+        }
 
         // Glowing dot on the latest reading, colored by its category.
         let last = readings.count - 1
         let p = point(last)
-        let dotColor = SparklineView.color(forCategory: readings[last].categoryNumber)
+        let dotColor = categoryColor(last)
         ctx.saveGState()
         ctx.setShadow(offset: .zero, blur: 7, color: dotColor.cgColor)
         ctx.setFillColor(dotColor.cgColor)
@@ -241,16 +223,17 @@ final class SparklineView: NSView {
         (text as NSString).draw(in: rect, withAttributes: attrs)
     }
 
-    /// Matches the menu-bar color scale used in AppDelegate.
+    /// The exact colors AppDelegate paints behind the menu-bar AQI value, so
+    /// the chart reads as the same scale.
     static func color(forCategory number: Int) -> NSColor {
         switch number {
-        case 0, 1: return .systemGreen
-        case 2: return .systemYellow
-        case 3: return .systemOrange
-        case 4: return .systemRed
-        case 5: return .systemPurple
-        case 6: return NSColor(red: 0.49, green: 0.0, blue: 0.13, alpha: 1)
-        default: return .systemGray
+        case 0, 1: return .green
+        case 2: return .yellow
+        case 3: return .orange
+        case 4: return .red
+        case 5: return .purple
+        case 6: return .black
+        default: return .gray
         }
     }
 }
