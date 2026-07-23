@@ -1,1 +1,8 @@
 Secrets.swift
+
+# Xcode build artifacts & user state
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.DS_Store
